@@ -25,6 +25,11 @@ class TaskRunner(object):
 
     def run_tasks(self, debug=False):
         futures = []
+        tm_str =""
+        if debug:
+            tm_str = "Total exp runtime"
+        tm= TM(tm_str).start()
+
         with ProcessPoolExecutor(max_workers=self._num_workers) as executor:
             if debug:
                 print("Creating {} workers".format(self._num_workers))
@@ -35,15 +40,17 @@ class TaskRunner(object):
             wait(futures)
             if debug:
                 print("Workers ended!")
+        self._total_time = tm.stop()
         self._results = [f.result() for f in futures]
 
     def get_header(self):
-        return ("N,mean,median,min,max")
+        return ("N,total,mean,median,min,max")
 
     def get_result_summary(self, field="total"):
         value_list = [x[field] for x in self._results]
-        return("{},{},{},{},{}".format(self._num_workers,mean(value_list),
-            median(value_list),min(value_list),max(value_list)))
+        return("{},{},{},{},{}".format(self._num_workers, self._total_time,
+            mean(value_list), median(value_list),min(value_list),
+            max(value_list)))
 
 def run_experiment(name, task_class, min_workers=0, max_workers=16, step=1, 
                    debug=False, *args, **kwargs):
