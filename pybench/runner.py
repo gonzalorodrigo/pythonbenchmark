@@ -48,7 +48,7 @@ class TaskRunner(object):
 
     def get_result_summary(self, field="total"):
         value_list = [x[field] for x in self._results]
-        return("{},{},{},{},{}".format(self._num_workers, self._total_time,
+        return("{},{},{},{},{},{}".format(self._num_workers, self._total_time,
             mean(value_list), median(value_list),min(value_list),
             max(value_list)))
 
