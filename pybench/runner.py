@@ -1,10 +1,22 @@
 from concurrent.futures import ProcessPoolExecutor, wait
 from statistics import median, mean
+from pybench.perf import TM
 class TaskObject(object):
 
     def do_stuff(self, worker_id, debug=False):
-        """ Returns mean, median, min, max as a dict"""
-        return dict(total=0, mean_v=0, median_v=0, min_v=0, max_v=0, values=[])
+        msg=""
+        if debug:
+            print ("Worker {} starts".format(worker_id))
+            msg="Worker {} task".format(worker_id)
+        t = TM(msg).start()
+        self.do_op(worker_id, debug=debug)
+        s=t.stop()
+        if debug:
+            print ("Worker {} ends".format(worker_id))
+        return dict(total=s, mean_v=s, median_v=s, min_v=s, max_v=s, values=[s])
+    
+    def do_op(self, worker_id, debug=False):
+        pass
 class TaskRunner(object):
 
     def __init__(self, num_workers, task_objects):
