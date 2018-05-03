@@ -1,5 +1,6 @@
 from pybench.runner import run_experiment
 from pybench.tasks import CPUTask, PSQLTask
+from pybench.support import get_pg_data
 import argparse
 
 reps = 10000000
@@ -26,11 +27,12 @@ if args.cpu:
     run_experiment("CPU BOUND", CPUTask, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=10000000)
 if args.psql:
+    username, password = get_pg_data(username="postgres")
     run_experiment("PSQL", PSQLTask, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=10,
         table="searchengine_scopeimagemetadata",
         db_host="db", db_name="metadataserver", 
-        user="postgres", password=None)
+        user=username, password=password)
 
 
 

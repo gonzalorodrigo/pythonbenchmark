@@ -50,6 +50,7 @@ def run_experiment(name, task_class, min_workers=0, max_workers=16, step=1,
     max_workers+=1
     print("{} exp STARTED. Workers: {}".format(name, list(range(min_workers,
         max_workers, step))[1:]))
+    print("ARGS", args, kwargs)
     task_runners = []
     for num_workers in range (min_workers, max_workers, step):
         if num_workers==0:
