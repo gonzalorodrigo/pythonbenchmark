@@ -33,13 +33,15 @@ class TaskRunner(object):
         return("{},{},{},{},{}".format(self._num_workers,mean(value_list),
             median(value_list),min(value_list),max(value_list)))
 
-def run_experiment(name, task_class, min_workers=1, max_workers=16, step=1, 
+def run_experiment(name, task_class, min_workers=0, max_workers=16, step=1, 
                    debug=False, *args, **kwargs):
     max_workers+=1
     print("{} exp STARTED. Workers: {}".format(name, list(range(min_workers,
-        max_workers, step))))
+        max_workers, step))[1:]))
     task_runners = []
     for num_workers in range (min_workers, max_workers, step):
+        if num_workers==0:
+            continue
         tasks = [task_class(*args, **kwargs) for x in range(num_workers)]
         tr = TaskRunner(num_workers, tasks)
         task_runners.append(tr)
