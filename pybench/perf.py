@@ -19,9 +19,10 @@ class TM(object):
         seconds = self.get_time_s()
         if report:
             worker_s =""
-            if self._worker is not None:
-                worker_s = "W({}): ".format(self._worker)
-            print("{}Op({}) took {}s ".format(worker_s, self._msg, seconds))
+            if self._msg:
+                if self._worker is not None:
+                    worker_s = "W({}): ".format(self._worker)
+                print("{}Op({}) took {}s ".format(worker_s, self._msg, seconds))
         return seconds
 
     def get_time_s(self):
