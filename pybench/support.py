@@ -8,7 +8,7 @@ def get_pg_data(username=None, password=None):
         secret_file_name = os.getenv("POSTGRES_PASSWORD_FILE", None)
         if secret_file_name:
             with open(secret_file_name, "r") as f:
-                password = f.read()
+                password = f.read().strip()
         if not password:
             raise Exception("No password found")
     return username, password
