@@ -30,6 +30,7 @@ if args.psql:
     username, password = get_pg_data(username="postgres")
     run_experiment("PSQL", PSQLTask, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=10,
+        rows=100000,
         table="searchengine_scopeimagemetadata",
         db_host="db", db_name="metadataserver", 
         user=username, password=password)
