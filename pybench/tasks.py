@@ -39,6 +39,7 @@ class PSQLTask(TaskObject):
             base_start = i*self._rows
             cur.execute("SELECT * from {} LIMIT {} OFFSET {}".format(
                 self._table, self._rows, base_start))
+            cur.fetchall()
 
         cur.close()
         conn.close()
