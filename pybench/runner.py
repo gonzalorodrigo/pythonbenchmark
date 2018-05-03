@@ -1,5 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor, wait
-from numpy import median, mean
+from statistics import median, mean
 class TaskObject(object):
 
     def do_stuff(self, worker_id, debug=False):
