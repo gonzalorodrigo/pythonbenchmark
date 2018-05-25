@@ -27,6 +27,7 @@ class PSQLTask(TaskObject):
         self._db_name = db_name
         self._user = user
         self._password = password
+        self._id_field = id_field
 
 
     def do_op(self, worker_id, debug=False):
@@ -39,7 +40,7 @@ class PSQLTask(TaskObject):
             base_start = i*self._rows
             cur.execute("SELECT * from {} ORDER BY {} LIMIT {} OFFSET {}"
                 "".format(
-                self._table, id_field, self._rows, base_start))
+                self._table, self._id_field, self._rows, base_start))
             cur.fetchall()
 
         cur.close()
