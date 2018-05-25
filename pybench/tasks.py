@@ -19,7 +19,7 @@ class PSQLTask(TaskObject):
 
     def __init__(self, rows=10000, reps=10, table="table_name",
                 db_host="hostname", db_name="db_name", user="user", 
-                password=""):
+                password="", id_field="id"):
         self._rows = rows
         self._reps = reps
         self._table = table
@@ -37,8 +37,9 @@ class PSQLTask(TaskObject):
         cur = conn.cursor()
         for i in range(self._reps):
             base_start = i*self._rows
-            cur.execute("SELECT * from {} LIMIT {} OFFSET {}".format(
-                self._table, self._rows, base_start))
+            cur.execute("SELECT * from {} ORDER BY {} LIMIT {} OFFSET {}"
+                "".format(
+                self._table, id_field, self._rows, base_start))
             cur.fetchall()
 
         cur.close()
