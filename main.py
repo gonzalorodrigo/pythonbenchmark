@@ -1,5 +1,5 @@
 from pybench.runner import run_experiment
-from pybench.tasks import CPUTask, PSQLTask
+from pybench.tasks import CPUTask, PSQLTask,PSQLTaskAllTable
 from pybench.support import get_pg_data
 import argparse
 
@@ -21,6 +21,11 @@ parser.add_argument("-p", "--psql", action="store_true",
 parser.add_argument("-a", "--allpsql", action="store_true",
                     help="PSQL test retrieving all rows")
 
+parser.add_argument("-i", "--inverse", action="store_true",
+                    help="if set, AllPSQL test will asign rows in inverse"
+                    " order to woker_id")
+
+
 
 args = parser.parse_args()
 max_workers =  int(args.num_workers)
@@ -38,13 +43,12 @@ if args.psql:
         db_host="db", db_name="metadataserver", 
         user=username, password=password)
 if args.allpsql:
-    username, password = get_pg_data(username="postgres"):
-    run_experiment("PSQL", PSQLTask, max_workers=max_workers, 
+    run_experiment("PSQL", PSQLTaskAllTable, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=1,
-        number_of_workers=max_workers,
         table="searchengine_scopeimagemetadata",
         db_host="db", db_name="metadataserver", 
-        user=username, password=password)
+        user=username, password=password,
+        inverse=args.inverse)
 
 
 

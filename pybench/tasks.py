@@ -52,8 +52,8 @@ class PSQLTaskAllTable(TaskObject):
     def __init__(self, reps=1, number_of_workers=1,
                 table="table_name",
                 db_host="hostname", db_name="db_name", user="user", 
-                password="", id_field="id"):
-        self._rows = rows
+                password="", id_field="id",
+                inverse=False):
         self._reps = reps
         self._table = table
         self._db_host = db_host
@@ -62,6 +62,7 @@ class PSQLTaskAllTable(TaskObject):
         self._password = password
         self._id_field = id_field
         self._number_of_workers=number_of_workers
+        self._inverse = inverse
         conn = psycopg2.connect(dbname=self._db_name,
                                 host=self._db_host,
                                 user=self._user,
@@ -71,7 +72,7 @@ class PSQLTaskAllTable(TaskObject):
                 "".format(
                 self._table))
         result = cur.fetchone()
-        self._number_rows_in_table=result['count']
+        self._number_rows_in_table=result[0]
         cur.close()
         conn.close()
 
@@ -89,7 +90,13 @@ class PSQLTaskAllTable(TaskObject):
                                 password=self._password)
         cur = conn.cursor()
         for i in range(self._reps):
-            base_start = i*self._rows
+            if self._inverse:
+                base_start = (self._number_of_workers-1-worker_id)*self._rows
+            else:
+                base_start = worker_id*self._rows
+            if debug:
+                print ("Worker {}, retrieve rows {}-{}".format(worker_id,
+                    base_start, base_start+self._rows))
             cur.execute("SELECT * from {} ORDER BY {} LIMIT {} OFFSET {}"
                 "".format(
                 self._table, self._id_field, self._rows, base_start))

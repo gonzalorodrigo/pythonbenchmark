@@ -63,7 +63,9 @@ def run_experiment(name, task_class, min_workers=0, max_workers=16, step=1,
     for num_workers in range (min_workers, max_workers, step):
         if num_workers==0:
             continue
-        tasks = [task_class(*args, **kwargs) for x in range(num_workers)]
+        #tasks = [task_class(*args, **kwargs) for x in range(num_workers)]
+        kwargs["number_of_workers"]=num_workers
+        tasks = [task_class(*args, **kwargs)] *num_workers
         tr = TaskRunner(num_workers, tasks)
         task_runners.append(tr)
         if debug:
