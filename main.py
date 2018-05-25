@@ -17,7 +17,9 @@ parser.add_argument("-c", "--cpu", action="store_true",
                     help="CPU bound test")
 
 parser.add_argument("-p", "--psql", action="store_true",
-                    help="PASL test")
+                    help="PSQL test")
+parser.add_argument("-a", "--allpsql", action="store_true",
+                    help="PSQL test retrieving all rows")
 
 
 args = parser.parse_args()
@@ -26,11 +28,20 @@ worker_step=int(args.step)
 if args.cpu:
     run_experiment("CPU BOUND", CPUTask, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=10000000)
-if args.psql:
+if args.psql or args.allpsql:
     username, password = get_pg_data(username="postgres")
+if args.psql:
     run_experiment("PSQL", PSQLTask, max_workers=max_workers, 
         step=worker_step, debug=args.verbose, reps=10,
         rows=100000,
+        table="searchengine_scopeimagemetadata",
+        db_host="db", db_name="metadataserver", 
+        user=username, password=password)
+if args.allpsql:
+    username, password = get_pg_data(username="postgres"):
+    run_experiment("PSQL", PSQLTask, max_workers=max_workers, 
+        step=worker_step, debug=args.verbose, reps=1,
+        number_of_workers=max_workers,
         table="searchengine_scopeimagemetadata",
         db_host="db", db_name="metadataserver", 
         user=username, password=password)

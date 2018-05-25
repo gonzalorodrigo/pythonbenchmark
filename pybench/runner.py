@@ -3,6 +3,7 @@ from statistics import median, mean
 from pybench.perf import TM
 class TaskObject(object):
 
+
     def do_stuff(self, worker_id, debug=False):
         msg=""
         if debug:
