@@ -65,12 +65,15 @@ class PSQLTaskAllTable(TaskObject):
         self._inverse = inverse
        
         self._number_rows_in_table = self._get_num_rows()
+        self._start_index = self._get_start_index()
         self._rows = int(self._number_rows_in_table/self._number_of_workers)
         print("All Table retrieve exp init: Table {}, rows {},"
             " rows per worker {}".format(self._table,
                 self._number_rows_in_table,
                 self._rows))
 
+    def _get_start_index(self):
+        return 0
     def _get_num_rows_query(self):
         return ("SELECT count(*) from {}"
                 "".format(
@@ -87,46 +90,16 @@ class PSQLTaskAllTable(TaskObject):
         cur.close()
         conn.close()
         return num_rows
-
-
-    def do_op(self, worker_id, debug=False):
-        conn = psycopg2.connect(dbname=self._db_name,
-                                host=self._db_host,
-                                user=self._user,
-                                password=self._password)
-        cur = conn.cursor()
-        for i in range(self._reps):
-            if self._inverse:
-                base_start = (self._number_of_workers-1-worker_id)*self._rows
-            else:
-                base_start = worker_id*self._rows
-            if debug:
-                print ("Worker {}, retrieve rows {}-{}".format(worker_id,
-                    base_start, base_start+self._rows))
-            cur.execute("SELECT * from {} ORDER BY {} LIMIT {} OFFSET {}"
+    def _get_op_query(self, base_start, base_end, worker_id=None,
+        debug=False):
+        if debug:
+            print ("Worker {}, retrieve rows {} >= {}"
+                " and {} < {}".format(worker_id,
+                    self._id_field, base_start,
+                    self._id_field, base_end))
+        return ("SELECT * from {} ORDER BY {} LIMIT {} OFFSET {}"
                 "".format(
-                self._table, self._id_field, self._rows, base_start))
-            cur.fetchall()
-
-        cur.close()
-        conn.close()
-
-
-class PSQLTaskAllTableID(PSQLTaskAllTable):
-
-    def _get_num_rows_query(self):
-        return ("SELECT max({}) from {}"
-                "".format(
-                self._id_field,
-                self._table))
-    
-    def _get_op_query(self, base_start, base_end):
-        return ("SELECT * from {} "
-                        " WHERE {} >= {}  and {} < {}"
-                "".format(
-                self._table,
-                self._id_field, base_start,
-                self._id_field, base_end))
+                self._table, self._id_field, base_end-base_start, base_start))
 
     def do_op(self, worker_id, debug=False):
         conn = psycopg2.connect(dbname=self._db_name,
@@ -140,13 +113,74 @@ class PSQLTaskAllTableID(PSQLTaskAllTable):
             else:
                 base_start = worker_id*self._rows
             base_end = base_start+self._rows
-            if debug:
-                print ("Worker {}, retrieve rows {} >= {}"
-                    " and {} < {}".format(worker_id,
-                        self._id_field, base_start,
-                        self._id_field, base_end))
 
-            op_query = self._get_op_query(base_start, base_end)
+
+            op_query = self._get_op_query(base_start, base_end, debug=debug,
+                                          worker_id=worker_id)
+            if debug:
+                print("Worker {} Query: {}".format(worker_id, op_query))
+            cur.execute(op_query)
+            result=cur.fetchall()
+            if debug:
+                print("Worker {}: {} rows retrieved".format(worker_id,
+                    len(result)))
+
+        cur.close()
+        conn.close()
+
+
+class PSQLTaskAllTableID(PSQLTaskAllTable):
+
+    def _get_num_rows_query(self,):
+        return ("SELECT max({}) from {}"
+                "".format(
+                self._id_field,
+                self._table))
+    
+    def _get_op_query(self, base_start, base_end, debug=False,
+        worker_id=None):
+        if debug:
+            print ("Worker {}, retrieve rows {} >= {}"
+                " and {} < {}".format(worker_id,
+                    self._id_field, base_start,
+                    self._id_field, base_end))
+        return ("SELECT * from {} "
+                        " WHERE {} >= {}  and {} < {}"
+                "".format(
+                self._table,
+                self._id_field, base_start,
+                self._id_field, base_end))
+    def _get_start_index(self):
+        conn = psycopg2.connect(dbname=self._db_name,
+                                host=self._db_host,
+                                user=self._user,
+                                password=self._password)
+        cur = conn.cursor()
+        cur.execute("SELECT min({}) from {}"
+                "".format(
+                self._id_field,
+                self._table))
+        result = cur.fetchone()
+        num_rows=result[0]
+        cur.close()
+        conn.close()
+        return num_rows
+
+    def do_op(self, worker_id, debug=False):
+        conn = psycopg2.connect(dbname=self._db_name,
+                                host=self._db_host,
+                                user=self._user,
+                                password=self._password)
+        cur = conn.cursor()
+        for i in range(self._reps):
+            if self._inverse:
+                base_start = (self._number_of_workers-1-worker_id)*self._rows
+            else:
+                base_start = worker_id*self._rows
+            base_end = base_start+self._rows
+
+
+            op_query = self._get_op_query(base_start, base_end, debug=debug)
             if debug:
                 print("Worker {} Query: {}".format(worker_id, op_query))
             cur.execute(op_query)
